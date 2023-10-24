@@ -10,6 +10,7 @@ import ru.netology.coroutines.dto.Author
 import ru.netology.coroutines.dto.Comment
 import ru.netology.coroutines.dto.PostWithComments
 import java.io.IOException
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.resume
@@ -26,15 +27,39 @@ private val client = OkHttpClient.Builder()
     .connectTimeout(30L, TimeUnit.SECONDS)
     .build()
 
+//fun main() {
+//    with(CoroutineScope(EmptyCoroutineContext)) {
+//        launch {
+//            try {
+//                val posts = getPosts(client)
+//                    .map { post ->
+//                        post.author = getAuthor(client, post.authorId)
+//                        async {
+//                            PostWithComments(post, getComments(client, post.id)
+//                                .onEach { comment ->
+//                                    comment.author = getAuthor(client, comment.authorId)
+//                                }
+//                            )
+//                        }
+//                    }.awaitAll()
+//                println(posts)
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
+//        }
+//    }
+//    Thread.sleep(30_000L)
+//}
+
 fun main() {
+    val start = Instant.now().toEpochMilli()
     with(CoroutineScope(EmptyCoroutineContext)) {
         launch {
             try {
                 val posts = getPosts(client)
                     .map { post ->
-                        post.author = getAuthor(client, post.authorId)
-
                         async {
+                            post.author = getAuthor(client, post.authorId)
                             PostWithComments(post, getComments(client, post.id)
                                 .onEach { comment ->
                                     comment.author = getAuthor(client, comment.authorId)
@@ -43,6 +68,7 @@ fun main() {
                         }
                     }.awaitAll()
                 println(posts)
+                println(Instant.now().toEpochMilli() - start)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
